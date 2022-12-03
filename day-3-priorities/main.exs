@@ -1,4 +1,4 @@
-defmodule PriorityPhaseOne do
+defmodule Priority do
   def midpoint(str) do
     str
       |> String.length
@@ -25,12 +25,31 @@ defmodule PriorityPhaseOne do
     priorities[dup]
   end
 
-  def check(input, priorities) do
+  def find_badge_priorities(rucksack_group, priorities) do
+    badge = rucksack_group
+      |> Enum.map(fn (x) -> MapSet.new(String.split(x, "", trim: true)) end)
+      |> Enum.reduce(fn (rs, acc) -> MapSet.intersection(acc, rs) end)
+      |> Enum.to_list()
+      |> Enum.at(0)
+    priorities[badge]
+  end
+
+  def check_part_one(input, priorities) do
     Enum.reduce(File.stream!(input), 0, fn (rucksack, priority) ->
       priority + find_common_item_priority(rucksack |> String.trim(), priorities)
     end)
   end
+
+  def check_part_two(input, priorities) do
+    File.read!(input)
+      |> String.split("\n")
+      |> Enum.chunk_every(3)
+      |> Enum.map(fn (group) -> find_badge_priorities(group, priorities) end)
+      |> Enum.sum
+  end
 end
 
-IO.puts("Phase 1 test: #{PriorityPhaseOne.check("test_input.txt", PriorityPhaseOne.priorities)}")
-IO.puts("Phase 1 real: #{PriorityPhaseOne.check("input.txt", PriorityPhaseOne.priorities)}")
+IO.puts("Phase 1 test: #{Priority.check_part_one("test_input.txt", Priority.priorities)}")
+IO.puts("Phase 1 real: #{Priority.check_part_one("input.txt", Priority.priorities)}")
+IO.puts("Phase 2 test: #{Priority.check_part_two("test_input.txt", Priority.priorities)}")
+IO.puts("Phase 2 real: #{Priority.check_part_two("input.txt", Priority.priorities)}")
