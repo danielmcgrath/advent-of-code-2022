@@ -7,6 +7,7 @@ defmodule Tuner do
     cond do
       Enum.slice(stream, index..(index + len - 1)) |> is_unique? ->
         index + len
+
       true ->
         find_marker(stream, len, index + 1)
     end

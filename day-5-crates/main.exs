@@ -14,12 +14,14 @@ defmodule Stack do
   end
 
   def popn(s, n) do
-    [values, remaining] = Enum.with_index(s.values) |> Enum.reduce([[], []], fn ({v, idx}, acc) ->
-      cond do
-        idx < n -> [Enum.at(acc, 0) ++ [v], Enum.at(acc, 1)]
-        idx >= n -> [Enum.at(acc, 0), Enum.at(acc, 1) ++ [v]]
-      end
-    end)
+    [values, remaining] =
+      Enum.with_index(s.values)
+      |> Enum.reduce([[], []], fn {v, idx}, acc ->
+        cond do
+          idx < n -> [Enum.at(acc, 0) ++ [v], Enum.at(acc, 1)]
+          idx >= n -> [Enum.at(acc, 0), Enum.at(acc, 1) ++ [v]]
+        end
+      end)
 
     [values, %Stack{values: remaining}]
   end
@@ -40,28 +42,38 @@ defmodule Crates do
   end
 
   def init_stacks(stacks) do
-    Enum.reduce(stacks, [], fn (rowstr, acc) ->
-      row = rowstr |> String.codepoints |> Enum.chunk_every(4) |> Enum.map(&Enum.join/1)
+    Enum.reduce(stacks, [], fn rowstr, acc ->
+      row = rowstr |> String.codepoints() |> Enum.chunk_every(4) |> Enum.map(&Enum.join/1)
+
       case length(acc) do
-        0 -> Enum.map(row, fn (c) -> %Stack{values: [strip(c)]} end)
-        _ -> row |> Enum.with_index |> Enum.map(fn {c, idx} ->
-          value = strip(c)
-          case value do
-            "" -> Enum.at(acc, idx)
-            _ -> Stack.push(Enum.at(acc, idx), strip(c))
-          end
-        end)
+        0 ->
+          Enum.map(row, fn c -> %Stack{values: [strip(c)]} end)
+
+        _ ->
+          row
+          |> Enum.with_index()
+          |> Enum.map(fn {c, idx} ->
+            value = strip(c)
+
+            case value do
+              "" -> Enum.at(acc, idx)
+              _ -> Stack.push(Enum.at(acc, idx), strip(c))
+            end
+          end)
       end
     end)
   end
 
   def parse_plan(filename) do
-    File.stream!(filename) |> Enum.reduce([[], []], fn (line, acc) ->
+    File.stream!(filename)
+    |> Enum.reduce([[], []], fn line, acc ->
       cond do
         String.starts_with?(line, "move") ->
           [Enum.at(acc, 0), Enum.at(acc, 1) ++ [String.trim(line)]]
+
         String.contains?(line, "[") ->
           [[line |> String.trim("\n") | Enum.at(acc, 0)], Enum.at(acc, 1)]
+
         true ->
           acc
       end
@@ -75,28 +87,32 @@ defmodule Crates do
   end
 
   def apply_moves(stacks, sequence) do
-    Enum.reduce(sequence, stacks, fn (move, acc) ->
+    Enum.reduce(sequence, stacks, fn move, acc ->
       [num_to_move, start_stack, end_stack] = parse_move(move)
-      Enum.reduce_while(0..num_to_move, acc, fn (idx, inner_stacks) ->
+
+      Enum.reduce_while(0..num_to_move, acc, fn idx, inner_stacks ->
         if idx == num_to_move do
           {:halt, inner_stacks}
         else
           {value, popped} = Stack.pop(Enum.at(inner_stacks, start_stack))
           pushed = Stack.push(Enum.at(inner_stacks, end_stack), value)
-          {:cont, Enum.with_index(inner_stacks) |> Enum.map(fn {s, idx} ->
-            case idx do
-              ^start_stack -> popped
-              ^end_stack -> pushed
-              _ -> s
-            end
-          end)}
+
+          {:cont,
+           Enum.with_index(inner_stacks)
+           |> Enum.map(fn {s, idx} ->
+             case idx do
+               ^start_stack -> popped
+               ^end_stack -> pushed
+               _ -> s
+             end
+           end)}
         end
       end)
     end)
   end
 
   def apply_moves_part_two(stacks, sequence) do
-    Enum.reduce(sequence, stacks, fn (move, acc) ->
+    Enum.reduce(sequence, stacks, fn move, acc ->
       [num_to_move, start_stack, end_stack] = parse_move(move)
       [values, popped] = Stack.popn(Enum.at(acc, start_stack), num_to_move)
       pushed = Stack.pushn(Enum.at(acc, end_stack), values)
@@ -106,18 +122,26 @@ defmodule Crates do
 
   def find_stack_toppers(filename) do
     [stacks, sequence] = parse_plan(filename)
-    init_stacks(stacks) |> apply_moves(sequence) |> Enum.map(fn (stack) ->
+
+    init_stacks(stacks)
+    |> apply_moves(sequence)
+    |> Enum.map(fn stack ->
       {value, _stack} = Stack.pop(stack)
       value
-    end) |> Enum.join("")
+    end)
+    |> Enum.join("")
   end
 
   def find_stack_toppers_part_two(filename) do
     [stacks, sequence] = parse_plan(filename)
-    init_stacks(stacks) |> apply_moves_part_two(sequence) |> Enum.map(fn (stack) ->
+
+    init_stacks(stacks)
+    |> apply_moves_part_two(sequence)
+    |> Enum.map(fn stack ->
       {value, _stack} = Stack.pop(stack)
       value
-    end) |> Enum.join("")
+    end)
+    |> Enum.join("")
   end
 end
 

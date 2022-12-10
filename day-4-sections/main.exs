@@ -5,8 +5,9 @@ defmodule SectionPairs do
   end
 
   def parse_pair(str) do
-    String.split(str, ",") |> Enum.map(fn (section) ->
-      String.split(section, "-") |> Enum.map(fn (num) -> unsafe_toint(num) end)
+    String.split(str, ",")
+    |> Enum.map(fn section ->
+      String.split(section, "-") |> Enum.map(fn num -> unsafe_toint(num) end)
     end)
   end
 
@@ -30,14 +31,14 @@ defmodule SectionPairs do
 
   def check_containment(filename) do
     File.stream!(filename)
-      |> Enum.filter(fn (pair) -> is_fully_contained(pair) end)
-      |> length
+    |> Enum.filter(fn pair -> is_fully_contained(pair) end)
+    |> length
   end
 
   def check_overlap(filename) do
     File.stream!(filename)
-      |> Enum.filter(fn (pair) -> has_overlap(pair) end)
-      |> length
+    |> Enum.filter(fn pair -> has_overlap(pair) end)
+    |> length
   end
 end
 

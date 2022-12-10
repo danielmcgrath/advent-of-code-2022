@@ -36,8 +36,10 @@ defmodule RPSPart1 do
   end
 
   def check(input) do
-    Enum.reduce(File.stream!(input), 0, fn (line, acc) ->
-      [theirs, ours | _] = String.trim(line) |> String.split(" ") |> Enum.map(fn (x) -> Option.from_v1_input(x) end)
+    Enum.reduce(File.stream!(input), 0, fn line, acc ->
+      [theirs, ours | _] =
+        String.trim(line) |> String.split(" ") |> Enum.map(fn x -> Option.from_v1_input(x) end)
+
       acc + outcome_score(theirs, ours) + Option.score(ours)
     end)
   end
@@ -65,23 +67,25 @@ defmodule RPSPart2 do
   end
 
   def check(input) do
-    Enum.reduce(File.stream!(input), 0, fn (line, acc) ->
-      [theirs, outcome | _] = String.trim(line) |> String.split(" ") |> Enum.map(fn (choice) ->
-        case choice do
-          "A" -> :rock
-          "B" -> :paper
-          "C" -> :scissors
-          "X" -> :lose
-          "Y" -> :draw
-          "Z" -> :win
-        end
-      end)
+    Enum.reduce(File.stream!(input), 0, fn line, acc ->
+      [theirs, outcome | _] =
+        String.trim(line)
+        |> String.split(" ")
+        |> Enum.map(fn choice ->
+          case choice do
+            "A" -> :rock
+            "B" -> :paper
+            "C" -> :scissors
+            "X" -> :lose
+            "Y" -> :draw
+            "Z" -> :win
+          end
+        end)
 
       acc + outcome_score(outcome) + Option.score(desired_play(theirs, outcome))
     end)
   end
 end
-
 
 IO.puts("Part 1: #{RPSPart1.check("input.txt")}")
 IO.puts("Part 2: #{RPSPart2.check("input.txt")}")

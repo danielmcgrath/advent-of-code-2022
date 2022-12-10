@@ -26,10 +26,11 @@ end
 
 defmodule Challenge do
   defp du(tree) do
-    Enum.reduce(tree, %{}, fn ({key, value}, acc) ->
+    Enum.reduce(tree, %{}, fn {key, value}, acc ->
       cond do
         is_integer(value) ->
           Map.put(acc, :size, Map.get(acc, :size, 0) + value)
+
         is_map(value) ->
           subdir = du(value)
           Map.put(acc, key, subdir) |> Map.put(:size, Map.get(acc, :size, 0) + subdir[:size])
@@ -38,14 +39,20 @@ defmodule Challenge do
   end
 
   defp build_filesystem(filename) do
-    File.stream!(filename) |> Enum.reduce(FS.new, fn (line, fs) ->
-      line |> String.trim |> case do
+    File.stream!(filename)
+    |> Enum.reduce(FS.new(), fn line, fs ->
+      line
+      |> String.trim()
+      |> case do
         "$ cd " <> dir ->
           FS.chdir(fs, dir)
+
         "dir" <> dir ->
           FS.add_dir(fs, dir)
+
         "$" <> _ ->
           fs
+
         _ ->
           [size, name] = String.split(line, " ", trim: true)
           FS.add_file(fs, name, size)
@@ -54,12 +61,14 @@ defmodule Challenge do
   end
 
   defp find_freeable_space(sizes, max) do
-    Enum.reduce(sizes, 0, fn ({key, value}, sum) ->
+    Enum.reduce(sizes, 0, fn {key, value}, sum ->
       cond do
         key == :size && value <= max ->
           sum + value
+
         key == :size && value > max ->
           sum
+
         true ->
           sum + find_freeable_space(value, max)
       end
@@ -67,7 +76,7 @@ defmodule Challenge do
   end
 
   defp candidate(tree, needed) do
-    Enum.reduce(tree, nil, fn ({key, value}, acc) ->
+    Enum.reduce(tree, nil, fn {key, value}, acc ->
       cond do
         key == :size && value >= needed -> Enum.min([acc, value])
         key == :size -> acc
@@ -78,8 +87,8 @@ defmodule Challenge do
 
   def freeable_space(filename, max_dir_size) do
     build_filesystem(filename).tree
-      |> du
-      |> find_freeable_space(max_dir_size)
+    |> du
+    |> find_freeable_space(max_dir_size)
   end
 
   def find_deletion_candidate(filename, total_space, update_size) do
@@ -88,7 +97,11 @@ defmodule Challenge do
   end
 end
 
-IO.puts("Part one (test): #{Challenge.freeable_space("test_input.txt", 100000)}")
-IO.puts("Part one: #{Challenge.freeable_space("input.txt", 100000)}")
-IO.puts("Part two (test): #{Challenge.find_deletion_candidate("test_input.txt", 70000000, 30000000)}")
-IO.puts("Part two: #{Challenge.find_deletion_candidate("input.txt", 70000000, 30000000)}")
+IO.puts("Part one (test): #{Challenge.freeable_space("test_input.txt", 100_000)}")
+IO.puts("Part one: #{Challenge.freeable_space("input.txt", 100_000)}")
+
+IO.puts(
+  "Part two (test): #{Challenge.find_deletion_candidate("test_input.txt", 70_000_000, 30_000_000)}"
+)
+
+IO.puts("Part two: #{Challenge.find_deletion_candidate("input.txt", 70_000_000, 30_000_000)}")
